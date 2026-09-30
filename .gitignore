@@ -1,0 +1,8 @@
+.venv
+*.db
+uploads/
+.env
+__pycache__
+_bmad/
+_bmad-output/
+.claude
