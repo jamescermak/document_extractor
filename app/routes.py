@@ -5,9 +5,10 @@ from .models import Document
 from .db import db
 from werkzeug.exceptions import abort
 import uuid
+from .schemas import DOC_TO_SCHEMA
 
 ALLOWED_EXTENSIONS = {'.pdf', '.png', '.jpg', '.jpeg'}
-ALLOWED_DOC_TYPES = {'invoice', 'receipt', 'resume'}
+ALLOWED_DOC_TYPES = list(DOC_TO_SCHEMA.keys())
 
 def register_routes(app):
     @app.route('/')
@@ -21,7 +22,7 @@ def register_routes(app):
     @app.route('/upload', methods=['POST'])
     def upload():
         if 'file' not in request.files:
-            abort(500, 'error uploading file')
+            abort(400, 'error uploading file')
         
         doc_type = request.form.get('doc_type')
         if doc_type not in ALLOWED_DOC_TYPES:

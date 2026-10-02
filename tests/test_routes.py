@@ -13,7 +13,8 @@ def test_upload(client, app, test_pdf):
         'file': (test_pdf, 'test_filename.pdf'),
         'doc_type': 'invoice'
     }
-    response = client.post('/upload', data=data, content_type='multipart/form-data', follow_redirects=True)  
+    
+    client.post('/upload', data=data, content_type='multipart/form-data', follow_redirects=True)  
     
     with app.app_context():
         doc = db.session.execute(select(Document)).scalar_one()
