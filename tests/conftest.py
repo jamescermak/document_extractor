@@ -2,7 +2,10 @@ import pytest
 from app import create_app
 from app.config import TestConfig
 from datetime import datetime
-from decimal import Decimal
+from types import SimpleNamespace
+from app.schemas import Invoice
+import anthropic
+import json
 
 
 @pytest.fixture
@@ -42,3 +45,14 @@ def raw_invoice(raw_lineitem):
         'total': '29.00', 
         'currency': 'USD'
         }
+
+@pytest.fixture
+def claude_message():
+    def mock_message(*, invoice, input_tokens, output_tokens, stop_reason, model):
+        return SimpleNamespace(
+            usage=SimpleNamespace(input_tokens=input_tokens, output_tokens=output_tokens),
+            stop_reason=stop_reason,
+            content=[anthropic.types.TextBlock(text=json.dumps(invoice), type='text')],
+            model=model
+        )
+    yield mock_message

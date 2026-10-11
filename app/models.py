@@ -19,3 +19,10 @@ class Document(db.Model):
     cost: Mapped[Decimal] = mapped_column(Numeric, nullable=True)
     latency_ms: Mapped[float] = mapped_column(nullable=True)
     
+    def __repr__(self):
+        return(f'Document(id={self.id}, original_filename={self.original_filename}, '
+               f'file_path={self.file_path}, doc_type={self.doc_type}, status={self.status}, '
+               f'timestamp={self.timestamp}, extracted_JSON={self.extracted_JSON}, flags_json={self.flags_JSON}, '
+               f'model_name={self.model_name}, input_tokens={self.input_tokens}, output_tokens={self.output_tokens}, '
+               f'cost={self.cost}, latency_ms={self.latency_ms}')
+    

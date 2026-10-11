@@ -6,7 +6,6 @@ from typing import Annotated
 def round_decimal(value):
     return round(value, 2)
     
-
 class LineItem(BaseModel):
     description: str = Field(description='name of item')
     quantity: Annotated[Decimal, Field(gt=0, description='weight/total amount of item'), AfterValidator(round_decimal)]
@@ -33,6 +32,7 @@ DOC_TO_SCHEMA = {
 def get_schema_from_doc(doctype: str):
     doctype = doctype.lower()
     return DOC_TO_SCHEMA[doctype]
+
 
 
     
