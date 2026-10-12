@@ -14,3 +14,9 @@
 - **Cost and latency logged per request:** about $0.007 and 4.5 s for the sample receipt.
 - **Portable ORM types behind DATABASE_URL:** moving to a server database is a config change.
 - **Tests fake the API at one seam:** the suite never touches the network
+
+## WIP
+- Containerization and Deployment with Docker
+- Processing the LLM request as a background job with an additional thread
+- Review page that shows the user the data from their upload (information currently in database, and upload returns a successful upload message)
+- RESTful API so another system can curl the results
