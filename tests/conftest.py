@@ -1,11 +1,13 @@
 import pytest
 from app import create_app
 from app.config import TestConfig
+from app.db import db
+from app.models import Document
 from datetime import datetime
 from types import SimpleNamespace
-from app.schemas import Invoice
 import anthropic
 import json
+import os
 
 
 @pytest.fixture
@@ -56,3 +58,22 @@ def claude_message():
             model=model
         )
     yield mock_message
+
+
+@pytest.fixture
+def make_db_row(test_pdf, app):
+    def make_row():
+        original_filename = test_pdf.name
+        file_path = os.path.abspath(test_pdf.name)
+        doc_type = 'invoice'
+        
+        doc = Document(
+            original_filename=original_filename,
+            file_path=file_path,
+            doc_type=doc_type,
+            status='uploaded'
+        )
+        with app.app_context():
+            db.session.add(doc)
+            db.session.commit() 
+    yield make_row

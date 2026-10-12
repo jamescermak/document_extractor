@@ -1,96 +1,47 @@
-import pytest
 from sqlalchemy import select
 from app import db
 from app.models import Document
 from app import routes
-from app.schemas import Invoice
-import copy
+import time
+import threading
+
+class MockThread():
+    def __init__(self, target, args, daemon):
+        self.target = target
+        self.args = args
+    
+    def start(self):
+        self.target(*self.args)
 
 def test_health_route(client):
     response = client.get('/health')
     assert '200 OK' == response.status
+        
+def test_upload(monkeypatch, client, app, test_pdf):
+    job_list = []
+    def mock_job(doc_id, *args, **kwargs):
+        job_list.append(doc_id)    
     
-
-def test_upload(monkeypatch, client, app, test_pdf, raw_invoice):
-    def mock_extract(*args, **kwargs):
-        return {
-            'parsed_model': Invoice(**raw_invoice),
-            'attempt_count': 1,
-            'raw_errors': [],
-            'status': 'extracted',
-            'usage_record': {
-                'model': 'sample-claude-model',
-                'input_tokens': 1000,
-                'output_tokens': 1000,
-                'cost_usd': 0.0004,
-                'latency_ms': 3000
-            }
-        }
-    
-    monkeypatch.setattr(routes, 'extract_from_file', mock_extract)
+    monkeypatch.setattr(threading, 'Thread', MockThread)
+    monkeypatch.setattr(routes, 'run_job', mock_job)
     
     data = {
         'file': (test_pdf, 'test_filename.pdf'),
         'doc_type': 'invoice'
-    }
+    }    
+    response = client.post('/upload', data=data, content_type='multipart/form-data', follow_redirects=False)      
     
-    client.post('/upload', data=data, content_type='multipart/form-data', follow_redirects=True)  
     with app.app_context():
-        errors = []
         doc = db.session.execute(select(Document)).scalar_one()
-        
-        if not doc.status == 'extracted':
+        errors = []
+        if not doc.status == 'uploaded':
             errors.append('doc status error')
-        
-        if not doc.original_filename == 'test_filename.pdf':
-            errors.append('file name error')
-        
-        if not doc.model_name == 'sample-claude-model':
-            errors.append('model name error') 
-        
+        if not doc.id == 1:
+            errors.append('doc id error')
+        if not response.status_code == 302:
+            errors.append(f'status code error, {response.status_code} != 302')
+        if not len(job_list) == 1 or job_list[0] != doc.id:
+            errors.append('error when calling run_job')
+    
         assert not errors, 'errors occured:\n{}'.format('\n'.join(errors))
 
-
-def test_bad_invoice(monkeypatch, client, app, test_pdf, raw_invoice):
-    def mock_extract(*args, **kwargs):
-        bad_invoice = copy.deepcopy(raw_invoice)
-        bad_invoice['total'] = '5.00'
-        return {
-            'parsed_model': Invoice(**bad_invoice),
-            'attempt_count': 1,
-            'raw_errors': [],
-            'status': 'extracted',
-            'usage_record': {
-                'model': 'sample-claude-model',
-                'input_tokens': 1000,
-                'output_tokens': 1000,
-                'cost_usd': 0.0004,
-                'latency_ms': 3000
-            }
-        }
-    
-    monkeypatch.setattr(routes, 'extract_from_file', mock_extract)
-    
-    data = {
-        'file': (test_pdf, 'test_filename.pdf'),
-        'doc_type': 'invoice'
-    }
-    
-    client.post('/upload', data=data, content_type='multipart/form-data', follow_redirects=True)  
-    with app.app_context():
-        errors = []
-        doc = db.session.execute(select(Document)).scalar_one()
-        
-        if not doc.status == 'needs_review':
-            errors.append('doc status error')
-        
-        if not doc.original_filename == 'test_filename.pdf':
-            errors.append('file name error')
-        
-        if not doc.model_name == 'sample-claude-model':
-            errors.append('model name error') 
-        
-        if not ('error when computing total, expected_total=Decimal(\'29.00\'), actual_total=Decimal(\'5.00\')' in doc.flags_JSON): 
-            errors.append('flags_JSON error')
-        
-        assert not errors, 'errors occured:\n{}'.format('\n'.join(errors))

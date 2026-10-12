@@ -1,4 +1,3 @@
-import pytest
 from app import extraction
 from app.schemas import Invoice
 import os
