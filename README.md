@@ -1,5 +1,10 @@
-# A Flask service that turns uploaded invoices and receipts (PDF or image) into validated, structured records
+# A Flask service that extracts receipt/invoice information with Claude API, validates it, and stores it as database records
+## Sample Usage with a Costco Receipt
+
+https://github.com/user-attachments/assets/79c1a675-17da-4676-b511-6161b9847ff5
+
 ## How it Works
+
 - The upload is saved and gets a row with status uploaded.
 - Claude extracts the fields against the Pydantic schema.
 - The output is validated, with one retry that feeds the error back to the model.
