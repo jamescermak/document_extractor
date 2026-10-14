@@ -18,5 +18,5 @@
 ## WIP
 - Containerization and Deployment with Docker
 - Processing the LLM request as a background job with an additional thread
-- Review page that shows the user the data from their upload (information currently in database, and upload returns a successful upload message)
+- ``Review page that shows the user the data from their upload (information currently in database, and upload returns a successful upload message)`` Also added manual approval to validate LLM responses against ground truth, manual correction is re-ran through validation
 - RESTful API so another system can curl the results
