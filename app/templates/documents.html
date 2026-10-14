@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta />
+    <title>Document</title>
+    <link rel="stylesheet" href="../static/style.css" />
+  </head>
+  <body>
+    <h1>Review Document</h1>
+    {% if invoice %}
+    <div>
+      <form method="post" action="{{ url_for('approve', id=data.id) }}">
+        <h2>Vendor</h2>
+        <input type="text" name="new_vendor" value="{{ invoice.vendor }}" />
+
+        <h2>Date</h2>
+        <input type="text" name="new_date" value="{{ invoice.date }}" />
+
+        <h2>Items</h2>
+        {% for item in invoice.line_items %}
+        <div>
+          <h3>{{ item.description }}</h3>
+          <ul>
+            <li>Unit Price: {{ item.unit_price }}</li>
+            <li>Quantity: {{ item.quantity }}</li>
+            <li>Line Total: {{ item.line_total }}</li>
+          </ul>
+        </div>
+        {% endfor %}
+
+        <h2>Subtotal</h2>
+        <input type="text" name="new_subtotal" value="{{ invoice.subtotal }}" />
+
+        <h2>Tax</h2>
+        <input type="text" name="new_tax" value="{{ invoice.tax }}" />
+
+        <h2>Total Cost</h2>
+        <input type="text" name="new_total" value="{{ invoice.total }}" />
+        <div>
+          <h2>Warnings</h2>
+          <ul>
+            {% for warning in data.flags_JSON %}
+            <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <h2>Status</h2>
+        <p>{{ data.status }}</p>
+        {% if data.status != 'approved' %}
+        <div><button type="submit">Approve</button></div>
+        {% endif %}
+      </form>
+    </div>
+    {% endif %}
+  </body>
+</html>
