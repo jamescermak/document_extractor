@@ -1,5 +1,6 @@
 from flask import Flask
 from .routes import register_routes
+from .api import register_api
 from .db import db
 from .models import Document
 from .config import DevConfig
@@ -13,4 +14,5 @@ def create_app(Config=DevConfig):
         db.create_all()
     
     register_routes(app)
+    register_api(app)
     return app

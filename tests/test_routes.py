@@ -2,8 +2,9 @@ from sqlalchemy import select
 from app import db
 from app.models import Document
 from app import routes
-import time
+from app.schemas import Invoice
 import threading
+from datetime import datetime
 
 class MockThread():
     def __init__(self, target, args, daemon):
@@ -44,4 +45,61 @@ def test_upload(monkeypatch, client, app, test_pdf):
             errors.append('error when calling run_job')
     
         assert not errors, 'errors occured:\n{}'.format('\n'.join(errors))
+
+
+def test_documents_route(make_db_row, app, client, raw_invoice):
+    make_db_row()
+    with app.app_context():
+        doc = db.session.get(Document, 1)
+        doc.status = 'extracted'
+        doc.extracted_JSON = Invoice(**raw_invoice).model_dump(mode='json')
+        doc.flags_JSON = []
+        db.session.commit()
+
+    response = client.get('/documents/1')
+    errors = []
+    if not response.status == '200 OK':
+        errors.append(f'error with response.status: got {response.status}, expected 200 OK')
+    
+    if not b'Costco' in response.data:
+        errors.append(f'error rendering HTML, expected vendor name but None found')
+    
+    assert not errors, errors
+
+
+def test_approve_route(make_db_row, app, client, raw_invoice):
+    make_db_row()
+    with app.app_context():
+        doc = db.session.get(Document, 1)
+        doc.status = 'extracted'
+        doc.extracted_JSON = Invoice(**raw_invoice).model_dump(mode='json')
+        doc.flags_JSON = []
+        db.session.commit()
+    
+    data = {
+        'new_vendor': 'Safeway',
+        'new_date': datetime.now().date().isoformat(),
+        'new_subtotal': '21.01',
+        'new_tax': '8.00',
+        'new_total': '29.00',
+    }
+    
+    response = client.post('/documents/1/approve', data=data, follow_redirects=True)
+    
+    errors = []
+    if not response.status == '200 OK':
+        errors.append(f'response status error: got {response.status} expected \'200 OK\'')
+    
+    with app.app_context():
+        doc = db.session.get(Document, 1)
+        if not doc.status == 'approved':
+            errors.append(f'doc status error: got {doc.status}, expected \'approved\'')
+
+        if not ('vendor', 'Safeway') in doc.corrected_JSON.items():
+            errors.append(f'corrected_JSON error: got (\'vendor\', {doc.corrected_JSON['vendor']}), expected (\'vendor\', \'Safeway\')')
+        
+    assert not errors
+
+    
+    
 

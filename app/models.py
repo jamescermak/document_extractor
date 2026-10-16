@@ -27,3 +27,5 @@ class Document(db.Model):
                f'model_name={self.model_name}, input_tokens={self.input_tokens}, output_tokens={self.output_tokens}, '
                f'cost={self.cost}, latency_ms={self.latency_ms}')
     
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

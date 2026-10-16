@@ -29,7 +29,7 @@ def call_claude(messages, schema):
     schema = anthropic.transform_schema(schema)
     message = client.messages.create(
         model='claude-sonnet-5-5',
-        max_tokens=1024,
+        max_tokens=4068,
         messages=messages,
         output_config={
             'format': {
