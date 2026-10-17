@@ -17,7 +17,7 @@ class Document(db.Model):
     model_name: Mapped[str] = mapped_column(nullable=True)
     input_tokens: Mapped[int] = mapped_column(nullable=True)
     output_tokens: Mapped[int] = mapped_column(nullable=True)
-    cost: Mapped[Decimal] = mapped_column(Numeric, nullable=True)
+    cost: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=4), nullable=True)
     latency_ms: Mapped[float] = mapped_column(nullable=True)
     
     def __repr__(self):
@@ -28,4 +28,17 @@ class Document(db.Model):
                f'cost={self.cost}, latency_ms={self.latency_ms}')
     
     def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {
+            'doc_type': self.doc_type,
+            'id': self.id,
+            'status': self.status,
+            'flags': self.flags_JSON,
+            'data': self.corrected_JSON if self.corrected_JSON else self.extracted_JSON,
+            'usage': {
+                'model_name': self.model_name,
+                'input_tokens': self.input_tokens,
+                'output_tokens': self.output_tokens,
+                'cost': self.cost,
+                'latency': self.latency_ms
+            }
+        }
